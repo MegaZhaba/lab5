@@ -29,8 +29,9 @@ public class RequestService {
         return applicationRequestRepository.findById(id).orElse(null);
     }
 
-    public void deleteRequest(Long id) {
+    public boolean deleteRequest(Long id) {
         applicationRequestRepository.deleteById(id);
+        return true;
     }
 
     public List<ApplicationRequest> getPendingRequests() {
@@ -49,29 +50,37 @@ public class RequestService {
         return operatorRepository.findAll();
     }
 
-    public void createRequest(String userName, String commentary, String phone,
-                              Long courseId, List<Long> operatorIds) {
-        Courses course = courseRepository.findById(courseId).orElse(null);
-        if (course == null) return;
+    public ApplicationRequest createRequest(ApplicationRequest request) {
+        Courses course = courseRepository.findById(request.getCourseId()).orElse(null);
+        if (course == null) return null;
 
         ApplicationRequest req = new ApplicationRequest();
-        req.setUserName(userName);
-        req.setCommentary(commentary);
-        req.setPhone(phone);
+        req.setUserName(request.getUserName());
+        req.setCommentary(request.getCommentary());
+        req.setPhone(request.getPhone());
         req.setCourse(course);
 
-        if (operatorIds != null && !operatorIds.isEmpty()) {
-            List<Operators> operators = operatorRepository.findAllById(operatorIds);
+        if (request.getOperatorIds() != null && !request.getOperatorIds().isEmpty()) {
+            List<Operators> operators = operatorRepository.findAllById(request.getOperatorIds());
             req.setOperators(operators);
         }
         req.setHandled(false);
-        applicationRequestRepository.save(req);
+        return applicationRequestRepository.save(req);
     }
-    public void markAsProcessed(Long id) {
+
+    public boolean markAsProcessed(Long id) {
         ApplicationRequest req = applicationRequestRepository.findById(id).orElse(null);
-        if (req != null && !req.isHandled()) {
+
+        if (req == null) {
+            return false;
+        }
+
+        if (!req.isHandled()) {
             req.setHandled(true);
             applicationRequestRepository.save(req);
         }
+
+        return true; // всё прошло успешно
     }
+
 }

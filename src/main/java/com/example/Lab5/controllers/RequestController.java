@@ -2,73 +2,98 @@ package com.example.Lab5.controllers;
 
 import com.example.Lab5.entities.ApplicationRequest;
 import com.example.Lab5.services.RequestService;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.RequestEntity;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Controller
+@RestController
+@NoArgsConstructor
 public class RequestController {
 
     @Autowired
     private RequestService requestService;
 
     @GetMapping("/")
-    public String getAll(Model model) {
-        model.addAttribute("requests", requestService.getAllRequests());
-        return "list";
+    public ResponseEntity<?> getAll() {
+        List<ApplicationRequest> requests = requestService.getAllRequests();
+
+        if (requests.isEmpty()) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } else {
+            return new ResponseEntity<>(requests, HttpStatus.OK);
+        }
     }
 
-    @GetMapping("/new")
-    public String addForm(Model model) {
-        model.addAttribute("request", new ApplicationRequest());
-        model.addAttribute("courses", requestService.getAllCourses());
-        model.addAttribute("operators", requestService.getAllOperators());
-        return "add";
-    }
+//    @GetMapping("/new")
+//    public String addForm(Model model) {
+//        model.addAttribute("request", new ApplicationRequest());
+//        model.addAttribute("courses", requestService.getAllCourses());
+//        model.addAttribute("operators", requestService.getAllOperators());
+//        return "add";
+//    }
 
     @PostMapping("/new")
-    public String createRequest(@RequestParam String userName,
-                                @RequestParam String commentary,
-                                @RequestParam String phone,
-                                @RequestParam Long courseId,
-                                @RequestParam(required = false) List<Long> operatorIds) {
-        requestService.createRequest(userName, commentary, phone, courseId, operatorIds);
-        return "redirect:/";
+    public ResponseEntity<ApplicationRequest> createRequest(@RequestBody ApplicationRequest applicationRequest) {
+        ApplicationRequest created = requestService.createRequest(applicationRequest);
+        return new ResponseEntity<>(created, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
-    public String detail(@PathVariable Long id, Model model) {
+    public ResponseEntity<?> detail(@PathVariable(value = "id") Long id) {
         ApplicationRequest req = requestService.getRequestById(id);
-        if (req == null) return "redirect:/";
-        model.addAttribute("request", req);
-        return "details";
+        if (req == null) {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        } else {
+            return new ResponseEntity<>(req, HttpStatus.OK);
+        }
     }
 
-    @PostMapping("/{id}/process")
-    public String processRequest(@PathVariable Long id) {
-        requestService.markAsProcessed(id);
-        return "redirect:/" + id;
+    @PutMapping("/{id}/process")
+    public ResponseEntity<String> processRequest(@PathVariable Long id) {
+        boolean updated = requestService.markAsProcessed(id);
+
+        if (updated) {
+            return ResponseEntity.ok("Request with ID " + id + " has been processed successfully.");
+        } else {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Request with ID " + id + " not found.");
+        }
     }
 
-    @PostMapping("/{id}/delete")
-    public String delete(@PathVariable Long id) {
-        requestService.deleteRequest(id);
-        return "redirect:/";
+
+    @DeleteMapping("/{id}/delete")
+    public ResponseEntity<?> delete(@PathVariable(value = "id") Long id ) {
+        boolean deleteReq = requestService.deleteRequest(id);
+
+        if (deleteReq) {
+            return new ResponseEntity<>(HttpStatus.OK);
+        } else {
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+        }
     }
     @GetMapping("/pending")
-    public String pending(Model model) {
-        model.addAttribute("requests", requestService.getPendingRequests());
-        return "pending";
+    public ResponseEntity<?> pending() {
+        List<ApplicationRequest> req = requestService.getPendingRequests();
+        if (req == null) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } else {
+            return new ResponseEntity<>(req, HttpStatus.OK);
+        }
     }
     @GetMapping("/processed")
-    public String processed(Model model) {
-        model.addAttribute("requests", requestService.getProcessedRequests());
-        return "processed";
+    public ResponseEntity<?> processed() {
+        List<ApplicationRequest> req = requestService.getProcessedRequests();
+        if (req == null) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } else {
+            return new ResponseEntity<>(req, HttpStatus.OK);
+        }
     }
 }
