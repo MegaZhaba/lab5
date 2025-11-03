@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>All Requests</title>
+  <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container mt-5">
+  <h1 class="mb-4">All Requests</h1>
+  <div class="mb-3">
+    <a href="/new" class="btn btn-primary">Add New Request</a>
+    <a href="/pending" class="btn btn-warning">Pending Requests</a>
+    <a href="/processed" class="btn btn-success">Processed Requests</a>
+  </div>
+  <table class="table table-striped">
+    <thead class="table-dark">
+    <tr>
+      <th>ID</th>
+      <th>User Name</th>
+      <th>Phone</th>
+      <th>Status</th>
+      <th>Details</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="req : ${requests}">
+      <td th:text="${req.id}"></td>
+      <td th:text="${req.userName}"></td>
+      <td th:text="${req.phone}"></td>
+      <td>
+        <span th:text="${req.handled ? 'Processed' : 'Pending'}"
+              th:classappend="${req.handled} ? 'text-success' : 'text-warning'"></span>
+      </td>
+      <td><a th:href="@{|/${req.id}|}" class="btn btn-info btn-sm">View</a></td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
